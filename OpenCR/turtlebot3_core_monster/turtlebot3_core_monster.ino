@@ -49,6 +49,10 @@ ros::Publisher odom_pub("odom", &odom);
 sensor_msgs::JointState joint_states;
 ros::Publisher joint_states_pub("joint_states", &joint_states);
 
+// Global Velocity Msg Check
+geometry_msgs::Twist cmd_vel_check_msg;
+ros::Publisher cmd_vel_check_pub("cmd_vel_check", &cmd_vel_check_msg);
+
 /*******************************************************************************
 * Transform Broadcaster
 *******************************************************************************/
@@ -125,6 +129,10 @@ void setup()
   nh.advertise(cmd_vel_rc100_pub);
   nh.advertise(odom_pub);
   nh.advertise(joint_states_pub);
+
+  // Added Publisher to publish command velocity
+  nh.advertise(cmd_vel_check_pub);
+    
   tfbroadcaster.init(nh);
 
   nh.loginfo("Connected to OpenCR board!");
@@ -205,6 +213,11 @@ void loop()
   // Show LED status
   showLedStatus();
 
+  // Publish Command Velocity Information as a check
+  cmd_vel_check_msg.linear.x = goal_linear_velocity;
+  cmd_vel_check_msg.linear.y = goal_angular_velocity;
+  cmd_vel_check_pub.publish(&cmd_vel_check_msg);
+  
   // Call all the callbacks waiting to be called at that point in time
   nh.spinOnce();
 }
