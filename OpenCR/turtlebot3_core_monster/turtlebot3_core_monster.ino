@@ -112,24 +112,6 @@ float joint_states_eff[2] = {0.0, 0.0};
 #define LED_ROS_CONNECT 3
 
 /*******************************************************************************
-* Declaration for Battery
-*******************************************************************************/
-#define BATTERY_POWER_OFF             0
-#define BATTERY_POWER_STARTUP         1
-#define BATTERY_POWER_NORMAL          2
-#define BATTERY_POWER_CHECK           3
-#define BATTERY_POWER_WARNNING        4
-
-static bool    setup_end       = false;
-static uint8_t battery_voltage = 0;
-static float   battery_valtage_raw = 0;
-static uint8_t battery_state   = BATTERY_POWER_OFF;
-
-
-
-
-
-/*******************************************************************************
 * Setup function
 *******************************************************************************/
 void setup()
@@ -177,8 +159,6 @@ void setup()
   pinMode(13, OUTPUT);
 
   SerialBT2.begin(57600);
-
-  setup_end = true;
 }
 
 /*******************************************************************************
@@ -224,9 +204,6 @@ void loop()
 
   // Show LED status
   showLedStatus();
-
-  // Update Voltage
-  updateVoltageCheck();
 
   // Call all the callbacks waiting to be called at that point in time
   nh.spinOnce();
@@ -538,14 +515,31 @@ void controlMotorSpeed(void)
 {
   bool dxl_comm_result = false;
 
-  double wheel_speed_cmd[2];
-  double lin_vel1;
-  double lin_vel2;
+  //double wheel_speed_cmd[2];
+  //double lin_vel1;
+  //double lin_vel2;
+  double wheel1_spd_cmd, wheel2_spd_cmd, wheel3_spd_cmd, wheel4_spd_cmd;
+  double lin_vel1, lin_vel2, lin_vel3, lin_vel4;
 
-  wheel_speed_cmd[LEFT]  = goal_linear_velocity - (goal_angular_velocity * WHEEL_SEPARATION / 2);
-  wheel_speed_cmd[RIGHT] = goal_linear_velocity + (goal_angular_velocity * WHEEL_SEPARATION / 2);
+  // For Burger
+  //wheel_speed_cmd[LEFT]  = goal_linear_velocity - (goal_angular_velocity * WHEEL_SEPARATION / 2);
+  //wheel_speed_cmd[RIGHT] = goal_linear_velocity + (goal_angular_velocity * WHEEL_SEPARATION / 2);
 
-  lin_vel1 = wheel_speed_cmd[LEFT] * VELOCITY_CONSTANT_VALUE;
+  // For Monster
+  
+  wheel3_spd_cmd = goal_linear_velocity - (sqrt(WHEEL_POS_FROM_CENTER_X_1 * WHEEL_POS_FROM_CENTER_X_1 + WHEEL_POS_FROM_CENTER_Y_1 * WHEEL_POS_FROM_CENTER_Y_1) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_1 / WHEEL_POS_FROM_CENTER_X_1));
+
+  wheel4_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_2 * WHEEL_POS_FROM_CENTER_X_2 + WHEEL_POS_FROM_CENTER_Y_2 * WHEEL_POS_FROM_CENTER_Y_2) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_2 / WHEEL_POS_FROM_CENTER_X_2));
+  
+  wheel1_spd_cmd = goal_linear_velocity - (sqrt(WHEEL_POS_FROM_CENTER_X_3 * WHEEL_POS_FROM_CENTER_X_3 + WHEEL_POS_FROM_CENTER_Y_3 * WHEEL_POS_FROM_CENTER_Y_3) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_3 / WHEEL_POS_FROM_CENTER_X_3));
+
+  wheel2_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_4 * WHEEL_POS_FROM_CENTER_X_4 + WHEEL_POS_FROM_CENTER_Y_4 * WHEEL_POS_FROM_CENTER_Y_4) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_4 / WHEEL_POS_FROM_CENTER_X_4));
+  
+  
+  //lin_vel1 = wheel_speed_cmd[LEFT] * VELOCITY_CONSTANT_VALUE;
+  //lin_vel3 = lin_vel1; // Make Left Rear motor move with the same speed
+  
+  lin_vel1 = wheel1_spd_cmd * VELOCITY_CONSTANT_VALUE;
   if (lin_vel1 > LIMIT_X_MAX_VELOCITY)
   {
     lin_vel1 =  LIMIT_X_MAX_VELOCITY;
@@ -555,7 +549,10 @@ void controlMotorSpeed(void)
     lin_vel1 = -LIMIT_X_MAX_VELOCITY;
   }
 
-  lin_vel2 = wheel_speed_cmd[RIGHT] * VELOCITY_CONSTANT_VALUE;
+  //lin_vel2 = wheel_speed_cmd[RIGHT] * VELOCITY_CONSTANT_VALUE;
+  lin_vel2 = -1 * wheel2_spd_cmd * VELOCITY_CONSTANT_VALUE;
+  //lin_vel4 = lin_vel2; // Make Right Rear motor move with the same speed
+  
   if (lin_vel2 > LIMIT_X_MAX_VELOCITY)
   {
     lin_vel2 =  LIMIT_X_MAX_VELOCITY;
@@ -565,7 +562,29 @@ void controlMotorSpeed(void)
     lin_vel2 = -LIMIT_X_MAX_VELOCITY;
   }
 
-  dxl_comm_result = motor_driver.speedControl((int64_t)lin_vel1, (int64_t)lin_vel2);
+  lin_vel3 = wheel3_spd_cmd * VELOCITY_CONSTANT_VALUE;
+  if (lin_vel3 > LIMIT_X_MAX_VELOCITY)
+  {
+    lin_vel3 =  LIMIT_X_MAX_VELOCITY;
+  }
+  else if (lin_vel3 < -LIMIT_X_MAX_VELOCITY)
+  {
+    lin_vel3 = -LIMIT_X_MAX_VELOCITY;
+  }
+
+  lin_vel4 = -1 * wheel4_spd_cmd * VELOCITY_CONSTANT_VALUE;
+  if (lin_vel4 > LIMIT_X_MAX_VELOCITY)
+  {
+    lin_vel4 =  LIMIT_X_MAX_VELOCITY;
+  }
+  else if (lin_vel4 < -LIMIT_X_MAX_VELOCITY)
+  {
+    lin_vel4 = -LIMIT_X_MAX_VELOCITY;
+  }
+
+  //dxl_comm_result = motor_driver.speedControl((int64_t)lin_vel1, (int64_t)lin_vel2);
+  dxl_comm_result = motor_driver.speedControl((int64_t)lin_vel1, (int64_t)lin_vel2, (int64_t)lin_vel3, (int64_t)lin_vel4);
+
   if (dxl_comm_result == false)
     return;
 }
@@ -814,185 +833,4 @@ void updateGyroCali(void)
   {
     gyro_cali = false;
   }
-}
-
-/*******************************************************************************
-* updateVoltageCheck
-*******************************************************************************/
-void updateVoltageCheck(void)
-{
-  static bool startup = false;
-  static int vol_index = 0;
-  static int prev_state = 0;
-  static int alram_state = 0;
-  static int check_index = 0;
-
-  int i;
-  float vol_sum;
-  float vol_value;
-
-  static uint32_t process_time[8] = {0,};
-  static float    vol_value_tbl[10] = {0,};
-
-  float voltage_ref       = 11.0 + 0.0;
-  float voltage_ref_warn  = 11.0 + 0.0;
-
-
-  if (startup == false)
-  {
-    startup = true;
-    for (i=0; i<8; i++)
-    {
-      process_time[i] = millis();
-    }
-  }
-
-  if (millis()-process_time[0] > 100)
-  {
-    process_time[0] = millis();
-
-    vol_value_tbl[vol_index] = getPowerInVoltage();
-
-    vol_index++;
-    vol_index %= 10;
-
-    vol_sum = 0;
-    for(i=0; i<10; i++)
-    {
-        vol_sum += vol_value_tbl[i];
-    }
-    vol_value = vol_sum/10;
-    battery_valtage_raw = vol_value;
-
-    //Serial.println(vol_value);
-
-    battery_voltage = vol_value;
-  }
-
-
-  if(millis()-process_time[1] > 1000)
-  {
-    process_time[1] = millis();
-
-    //Serial.println(battery_state);
-
-    switch(battery_state)
-    {
-      case BATTERY_POWER_OFF:
-        if (setup_end == true)
-        {
-          alram_state = 0;
-          if(battery_valtage_raw > 5.0)
-          {
-            check_index   = 0;
-            prev_state    = battery_state;
-            battery_state = BATTERY_POWER_STARTUP;
-          }
-          else
-          {
-            noTone(BDPIN_BUZZER);
-          }
-        }
-        break;
-
-      case BATTERY_POWER_STARTUP:
-        if(battery_valtage_raw > voltage_ref)
-        {
-          check_index   = 0;
-          prev_state    = battery_state;
-          battery_state = BATTERY_POWER_NORMAL;
-          setPowerOn();
-        }
-
-        if(check_index < 5)
-        {
-          check_index++;
-        }
-        else
-        {
-          if (battery_valtage_raw > 5.0)
-          {
-            prev_state    = battery_state;
-            battery_state = BATTERY_POWER_CHECK;
-          }
-          else
-          {
-            prev_state    = battery_state;
-            battery_state = BATTERY_POWER_OFF;
-          }
-        }
-        break;
-
-      case BATTERY_POWER_NORMAL:
-        alram_state = 0;
-        if(battery_valtage_raw < voltage_ref)
-        {
-          prev_state    = battery_state;
-          battery_state = BATTERY_POWER_CHECK;
-          check_index   = 0;
-        }
-        break;
-
-      case BATTERY_POWER_CHECK:
-        if(check_index < 5)
-        {
-          check_index++;
-        }
-        else
-        {
-          if(battery_valtage_raw < voltage_ref_warn)
-          {
-            setPowerOff();
-            prev_state    = battery_state;
-            battery_state = BATTERY_POWER_WARNNING;
-          }
-        }
-        if(battery_valtage_raw >= voltage_ref)
-        {
-          setPowerOn();
-          prev_state    = battery_state;
-          battery_state = BATTERY_POWER_NORMAL;
-        }
-        break;
-
-      case BATTERY_POWER_WARNNING:
-        alram_state ^= 1;
-        if(alram_state)
-        {
-          tone(BDPIN_BUZZER, 1000, 500);
-        }
-
-        if(battery_valtage_raw > voltage_ref)
-        {
-          setPowerOn();
-          prev_state    = battery_state;
-          battery_state = BATTERY_POWER_NORMAL;
-        }
-        else
-        {
-          setPowerOff();
-        }
-
-        if(battery_valtage_raw < 5.0)
-        {
-          setPowerOff();
-          prev_state    = battery_state;
-          battery_state = BATTERY_POWER_OFF;
-        }
-        break;
-
-      default:
-        break;
-    }
-  }
-}
-
-void setPowerOn()
-{
-  digitalWrite(BDPIN_DXL_PWR_EN, HIGH);
-}
-
-void setPowerOff()
-{
-  digitalWrite(BDPIN_DXL_PWR_EN, LOW);
 }

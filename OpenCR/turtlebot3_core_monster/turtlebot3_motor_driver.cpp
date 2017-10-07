@@ -22,7 +22,9 @@ Turtlebot3MotorDriver::Turtlebot3MotorDriver()
 : baudrate_(BAUDRATE),
   protocol_version_(PROTOCOL_VERSION),
   left_wheel_id_(DXL_LEFT_ID),
-  right_wheel_id_(DXL_RIGHT_ID)
+  right_wheel_id_(DXL_RIGHT_ID),
+  left_rear_wheel_id_(DXL_LEFT_REAR_ID), right_rear_wheel_id_(DXL_RIGHT_REAR_ID)
+  
 {
 }
 
@@ -65,6 +67,8 @@ bool Turtlebot3MotorDriver::init(void)
   // Enable Dynamixel Torque
   setTorque(left_wheel_id_, true);
   setTorque(right_wheel_id_, true);
+  setTorque(left_rear_wheel_id_, true);
+  setTorque(right_rear_wheel_id_, true);
 
   groupSyncWriteVelocity_ = new dynamixel::GroupSyncWrite(portHandler_, packetHandler_, ADDR_X_GOAL_VELOCITY, LEN_X_GOAL_VELOCITY);
   groupSyncReadEncoder_   = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, ADDR_X_PRESENT_POSITION, LEN_X_PRESENT_POSITION);
@@ -93,6 +97,10 @@ void Turtlebot3MotorDriver::closeDynamixel(void)
   // Disable Dynamixel Torque
   setTorque(left_wheel_id_, false);
   setTorque(right_wheel_id_, false);
+
+  // Added in for monster
+  setTorque(left_rear_wheel_id_, false);
+  setTorque(right_rear_wheel_id_, false);
 
   // Close port
   portHandler_->closePort();
@@ -135,7 +143,7 @@ bool Turtlebot3MotorDriver::readEncoder(int32_t &left_value, int32_t &right_valu
   return true;
 }
 
-bool Turtlebot3MotorDriver::speedControl(int64_t left_wheel_value, int64_t right_wheel_value)
+bool Turtlebot3MotorDriver::speedControl(int64_t left_wheel_value, int64_t right_wheel_value, int64_t left_rear_wheel_value, int64_t right_rear_wheel_value)
 {
   bool dxl_addparam_result_;
   int8_t dxl_comm_result_;
@@ -147,6 +155,17 @@ bool Turtlebot3MotorDriver::speedControl(int64_t left_wheel_value, int64_t right
   dxl_addparam_result_ = groupSyncWriteVelocity_->addParam(right_wheel_id_, (uint8_t*)&right_wheel_value);
   if (dxl_addparam_result_ != true)
     return false;
+
+  // Added 2 motors for monster
+  dxl_addparam_result_ = groupSyncWriteVelocity_->addParam(left_rear_wheel_id_, (uint8_t*)&left_rear_wheel_value);
+  if (dxl_addparam_result_ != true)
+    return false;
+
+  dxl_addparam_result_ = groupSyncWriteVelocity_->addParam(right_rear_wheel_id_, (uint8_t*)&right_rear_wheel_value);
+  if (dxl_addparam_result_ != true)
+    return false;  
+  
+  //
 
   dxl_comm_result_ = groupSyncWriteVelocity_->txPacket();
   if (dxl_comm_result_ != COMM_SUCCESS)

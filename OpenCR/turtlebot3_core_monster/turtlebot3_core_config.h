@@ -56,6 +56,17 @@
 #define LEFT                             0
 #define RIGHT                            1
 
+
+// Variables added for monster
+#define WHEEL_POS_FROM_CENTER_X_1       -0.100    // meter
+#define WHEEL_POS_FROM_CENTER_Y_1       -0.128    // meter
+#define WHEEL_POS_FROM_CENTER_X_2       0.100     // meter
+#define WHEEL_POS_FROM_CENTER_Y_2       -0.128    // meter
+#define WHEEL_POS_FROM_CENTER_X_3       -0.100    // meter
+#define WHEEL_POS_FROM_CENTER_Y_3       0.128     // meter
+#define WHEEL_POS_FROM_CENTER_X_4       0.100     // meter
+#define WHEEL_POS_FROM_CENTER_Y_4       0.128     // meter
+
 #define VELOCITY_CONSTANT_VALUE          1263.632956882  // V = r * w = r * RPM * 0.10472
                                                          //   = 0.033 * 0.229 * Goal RPM * 0.10472
                                                          // Goal RPM = V * 1263.632956882
