@@ -53,6 +53,18 @@ ros::Publisher joint_states_pub("joint_states", &joint_states);
 geometry_msgs::Twist cmd_vel_check_msg;
 ros::Publisher cmd_vel_check_pub("cmd_vel_check", &cmd_vel_check_msg);
 
+// Individual Command Velocity (Local) check
+//std_msgs::Float32[8] = test;
+//std_msgs::Float64MultiArray motor_velocities;
+geometry_msgs::Twist motor_velocities; // Use geometry msg to store the info
+
+//motor_velocities.data.resize(8);
+//motor_velocities.data[8];
+ros::Publisher motor_vel_check_pub("motor_vel_check", &motor_velocities);
+
+
+
+
 /*******************************************************************************
 * Transform Broadcaster
 *******************************************************************************/
@@ -132,6 +144,10 @@ void setup()
 
   // Added Publisher to publish command velocity
   nh.advertise(cmd_vel_check_pub);
+
+
+  // Added Publisher to publish individual motor velocities
+  nh.advertise(motor_vel_check_pub);
     
   tfbroadcaster.init(nh);
 
@@ -215,8 +231,11 @@ void loop()
 
   // Publish Command Velocity Information as a check
   cmd_vel_check_msg.linear.x = goal_linear_velocity;
-  cmd_vel_check_msg.linear.y = goal_angular_velocity;
+  cmd_vel_check_msg.angular.z = goal_angular_velocity;
   cmd_vel_check_pub.publish(&cmd_vel_check_msg);
+
+  // Publish Individual Motor Velocities
+  motor_vel_check_pub.publish(&motor_velocities);
   
   // Call all the callbacks waiting to be called at that point in time
   nh.spinOnce();
@@ -542,12 +561,25 @@ void controlMotorSpeed(void)
   
   wheel3_spd_cmd = goal_linear_velocity - (sqrt(WHEEL_POS_FROM_CENTER_X_1 * WHEEL_POS_FROM_CENTER_X_1 + WHEEL_POS_FROM_CENTER_Y_1 * WHEEL_POS_FROM_CENTER_Y_1) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_1 / WHEEL_POS_FROM_CENTER_X_1));
 
-  wheel4_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_2 * WHEEL_POS_FROM_CENTER_X_2 + WHEEL_POS_FROM_CENTER_Y_2 * WHEEL_POS_FROM_CENTER_Y_2) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_2 / WHEEL_POS_FROM_CENTER_X_2));
+  // Flip sign
+  wheel4_spd_cmd = -(goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_2 * WHEEL_POS_FROM_CENTER_X_2 + WHEEL_POS_FROM_CENTER_Y_2 * WHEEL_POS_FROM_CENTER_Y_2) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_2 / WHEEL_POS_FROM_CENTER_X_2)));
+  
+  //wheel4_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_2 * WHEEL_POS_FROM_CENTER_X_2 + WHEEL_POS_FROM_CENTER_Y_2 * WHEEL_POS_FROM_CENTER_Y_2) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_2 / WHEEL_POS_FROM_CENTER_X_2));
   
   wheel1_spd_cmd = goal_linear_velocity - (sqrt(WHEEL_POS_FROM_CENTER_X_3 * WHEEL_POS_FROM_CENTER_X_3 + WHEEL_POS_FROM_CENTER_Y_3 * WHEEL_POS_FROM_CENTER_Y_3) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_3 / WHEEL_POS_FROM_CENTER_X_3));
 
-  wheel2_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_4 * WHEEL_POS_FROM_CENTER_X_4 + WHEEL_POS_FROM_CENTER_Y_4 * WHEEL_POS_FROM_CENTER_Y_4) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_4 / WHEEL_POS_FROM_CENTER_X_4));
-  
+  // Flip sign
+  wheel2_spd_cmd = -(goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_4 * WHEEL_POS_FROM_CENTER_X_4 + WHEEL_POS_FROM_CENTER_Y_4 * WHEEL_POS_FROM_CENTER_Y_4) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_4 / WHEEL_POS_FROM_CENTER_X_4)));
+
+  //wheel2_spd_cmd = goal_linear_velocity + (sqrt(WHEEL_POS_FROM_CENTER_X_4 * WHEEL_POS_FROM_CENTER_X_4 + WHEEL_POS_FROM_CENTER_Y_4 * WHEEL_POS_FROM_CENTER_Y_4) * goal_angular_velocity) * cos(atan(WHEEL_POS_FROM_CENTER_Y_4 / WHEEL_POS_FROM_CENTER_X_4));
+
+  // Assign wheel_spd commands
+  /*
+  motor_velocities.data[0] = wheel1_spd_cmd;
+  motor_velocities.data[1] = wheel2_spd_cmd;
+  motor_velocities.data[2] = wheel3_spd_cmd;
+  motor_velocities.data[3] = wheel4_spd_cmd;
+  */
   
   //lin_vel1 = wheel_speed_cmd[LEFT] * VELOCITY_CONSTANT_VALUE;
   //lin_vel3 = lin_vel1; // Make Left Rear motor move with the same speed
@@ -594,6 +626,20 @@ void controlMotorSpeed(void)
   {
     lin_vel4 = -LIMIT_X_MAX_VELOCITY;
   }
+
+  // Assign values after it has been multipled by the velocity constant
+  /*
+  motor_velocities.data[4] = lin_vel1;
+  motor_velocities.data[5] = lin_vel2;
+  motor_velocities.data[6] = lin_vel3;
+  motor_velocities.data[7] = lin_vel4;
+  */
+  
+  motor_velocities.linear.x = lin_vel1;
+  motor_velocities.linear.y = lin_vel2;
+  motor_velocities.linear.z = lin_vel3;
+  motor_velocities.angular.x = lin_vel4;
+  
 
   //dxl_comm_result = motor_driver.speedControl((int64_t)lin_vel1, (int64_t)lin_vel2);
   dxl_comm_result = motor_driver.speedControl((int64_t)lin_vel1, (int64_t)lin_vel2, (int64_t)lin_vel3, (int64_t)lin_vel4);

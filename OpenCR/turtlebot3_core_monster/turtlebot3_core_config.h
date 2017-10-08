@@ -37,6 +37,12 @@
 #include <IMU.h>
 #include <RC100.h>
 
+// Include Float64 Array
+#include <std_msgs/MultiArrayLayout.h> // Does not seem to make a difference
+#include <std_msgs/MultiArrayDimension.h> // Does not seem to make a difference
+
+#include <std_msgs/Float64MultiArray.h>
+
 #include "turtlebot3_motor_driver.h"
 
 #define CONTROL_MOTOR_SPEED_PERIOD       30   //hz
