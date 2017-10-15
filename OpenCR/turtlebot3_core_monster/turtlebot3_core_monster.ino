@@ -114,10 +114,18 @@ int32_t last_right_encoder = 0;
 *******************************************************************************/
 unsigned long prev_update_time;
 float odom_pose[3];
+/*
 char *joint_states_name[] = {"wheel_left_joint", "wheel_right_joint"};
 float joint_states_pos[2] = {0.0, 0.0};
 float joint_states_vel[2] = {0.0, 0.0};
 float joint_states_eff[2] = {0.0, 0.0};
+*/
+
+char *joint_states_name[] = {"wheel_left_joint", "wheel_right_joint", "wheel_left_joint_rear", "wheel_right_joint_rear"};
+float joint_states_pos[4] = {0.0, 0.0, 0.0, 0.0};
+float joint_states_vel[4] = {0.0, 0.0, 0.0, 0.0};
+float joint_states_eff[4] = {0.0, 0.0, 0.0, 0.0};
+
 
 /*******************************************************************************
 * Declaration for LED
@@ -173,10 +181,17 @@ void setup()
   joint_states.header.frame_id = "base_footprint";
   joint_states.name            = joint_states_name;
 
+/*
   joint_states.name_length     = 2;
   joint_states.position_length = 2;
   joint_states.velocity_length = 2;
   joint_states.effort_length   = 2;
+*/
+
+  joint_states.name_length     = 4;
+  joint_states.position_length = 4;
+  joint_states.velocity_length = 4;
+  joint_states.effort_length   = 4;
 
   prev_update_time = millis();
 
@@ -464,11 +479,19 @@ void updateJoint(void)
   joint_states_pos[LEFT]  = last_rad_[LEFT];
   joint_states_pos[RIGHT] = last_rad_[RIGHT];
 
+  // Added in
+  joint_states_pos[LEFT_REAR]  = last_rad_[LEFT];
+  joint_states_pos[RIGHT_REAR] = last_rad_[RIGHT];
+
   joint_states_vel[LEFT]  = last_velocity_[LEFT];
   joint_states_vel[RIGHT] = last_velocity_[RIGHT];
 
+  // Added in
+  joint_states_vel[LEFT_REAR]  = last_velocity_[LEFT];
+  joint_states_vel[RIGHT_REAR] = last_velocity_[RIGHT];
+
   joint_states.position = joint_states_pos;
-  joint_states.velocity = joint_states_vel;
+  joint_states.velocity = joint_states_vel; // Feed into actual joint_states msg variable
 }
 
 /*******************************************************************************
