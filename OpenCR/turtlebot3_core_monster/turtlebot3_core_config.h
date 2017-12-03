@@ -77,7 +77,8 @@
 #define WHEEL_POS_FROM_CENTER_Y_4       0.128     // meter
 */
 
-// Modified Monster Dimensions
+// Modified Monster Dimensions - Short
+/*
 #define WHEEL_POS_FROM_CENTER_X_1       -0.08    // meter 0.035
 #define WHEEL_POS_FROM_CENTER_Y_1       -0.035    // meter 0.08
 #define WHEEL_POS_FROM_CENTER_X_2       0.08     // meter
@@ -85,7 +86,23 @@
 #define WHEEL_POS_FROM_CENTER_X_3       -0.08    // meter
 #define WHEEL_POS_FROM_CENTER_Y_3       0.035     // meter
 #define WHEEL_POS_FROM_CENTER_X_4       0.08     // meter
-#define WHEEL_POS_FROM_CENTER_Y_4       0.08     // meter
+#define WHEEL_POS_FROM_CENTER_Y_4       0.035     // meter
+*/
+
+// Modified Monster v2 - Back long, Front short
+// Mapping
+// Ours:  1 2 3 4
+// Theirs:3 4 1 2
+// Change their 1, 2
+
+#define WHEEL_POS_FROM_CENTER_X_1       -0.08    // meter 0.035 
+#define WHEEL_POS_FROM_CENTER_Y_1       -0.128    // meter 0.08
+#define WHEEL_POS_FROM_CENTER_X_2       0.08     // meter
+#define WHEEL_POS_FROM_CENTER_Y_2       -0.128    // meter
+#define WHEEL_POS_FROM_CENTER_X_3       -0.08    // meter
+#define WHEEL_POS_FROM_CENTER_Y_3       0.035     // meter
+#define WHEEL_POS_FROM_CENTER_X_4       0.08     // meter
+#define WHEEL_POS_FROM_CENTER_Y_4       0.035     // meter
 
 #define VELOCITY_CONSTANT_VALUE          1263.632956882  // V = r * w = r * RPM * 0.10472
                                                          //   = 0.033 * 0.229 * Goal RPM * 0.10472
