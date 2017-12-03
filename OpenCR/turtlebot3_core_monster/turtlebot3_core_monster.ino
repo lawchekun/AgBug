@@ -35,6 +35,9 @@ ros::Subscriber<geometry_msgs::Twist> cmd_vel_sub("cmd_vel", commandVelocityCall
 turtlebot3_msgs::SensorState sensor_state_msg;
 ros::Publisher sensor_state_pub("sensor_state", &sensor_state_msg);
 
+// Create a 2nd sensor state msg to read from the encoders behind
+turtlebot3_msgs::SensorState sensor_state2_msg;
+
 // IMU of Turtlebot3
 sensor_msgs::Imu imu_msg;
 ros::Publisher imu_pub("imu", &imu_msg);
