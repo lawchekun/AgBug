@@ -161,25 +161,24 @@ void loop()
 
     }
 
-    // 0
-    else if (incomingByte == 48) // Stop
-    {
-      analogWrite(PWMA, 0);
-    }
-
-    // 2
+    // 2: 50 - 48 = 2 (ASCII to dec conversion)
     else if (incomingByte == 50) // Move up
     {
       analogWrite(PWMA, 64);
       digitalWrite(AIN1, LOW);       // sets the digital pin 13 on
       digitalWrite(AIN2, HIGH);  // LOW, LOW -> Freeze, HIGH, HIGH -> Freeze
     }
+    
+    // By Default, if there is no signal. Stop
+    // 0
+    else // else if (incomingByte == 48) // Stop
+    {
+      analogWrite(PWMA, 0);
+    }
+    
   } // End Serial.available()
 
-
-
-  
-  
+  // For Debugging
   // Waiting for Serial Input
   //Serial.println("Waiting for Serial Input");
   //analogWrite(PWMA, 128); // Use servo, analogWrite and servo both work
