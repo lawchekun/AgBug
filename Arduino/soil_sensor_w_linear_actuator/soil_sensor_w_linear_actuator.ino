@@ -51,7 +51,6 @@ ros::Subscriber<std_msgs::Float32> sub("linear_actuator_cmd", &actuatorCb );
 
 void setup()
 {
-
    // Initialize ROS node
    nh.initNode();
    nh.advertise(pub_temp);
@@ -107,8 +106,8 @@ void loop()
   humid_msg.data = humidity;
   pub_temp.publish(&temp_msg);
   pub_humid.publish(&humid_msg);
-  pub_linear_command_echo.publish(&linear_actuator_cmd_echo_msg);
-
+  pub_linear_command_echo.publish(&linear_actuator_cmd_echo_msg); // Topic to ensure linear_actuator_cmd msg is received
+  
   //Serial.println(linear_actuator_cmd);
   // For ROS
   // 1
@@ -117,22 +116,32 @@ void loop()
     analogWrite(PWMA, 64);
     digitalWrite(AIN1, HIGH);       // sets the digital pin 13 on
     digitalWrite(AIN2, LOW);        // sets the digital pin 13 off
-
-  }
-
-  // 0
-  else if (linear_actuator_cmd == 10) // Stop
-  {
-    analogWrite(PWMA, 0);
-  }
-
+    
+  }// End else if for moving down
+  
   // 2
   else if (linear_actuator_cmd == 12) // Move up
   {
     analogWrite(PWMA, 64);
     digitalWrite(AIN1, LOW);       // sets the digital pin 13 on
     digitalWrite(AIN2, HIGH);  // LOW, LOW -> Freeze, HIGH, HIGH -> Freeze
-  }
+  } // End else if for moving up
+
+  // 0: By Default, it should stop unless a signal is given
+  else // if (linear_actuator_cmd == 10) // Stop
+  {
+    analogWrite(PWMA, 0);
+  } // End else
+
+  // After publishing the echo message.
+  // Set it to be 0, so that a continuous stream of linear_actuator_cmd messages have to be sent
+  // If it is not set to non-zero in the next time step, the else would trigger and turn off the motor
+  linear_actuator_cmd_echo_msg.data = 0;
+  
+  // Reset the variable for the linear actuator cmd to 0, so there needs to be a continuous stream of data for it to actuate the motor
+  // linear_actuator_cmd = 0; This does not work, as actuator_msg.data is still the old value, linear_actuator_cmd takes value from actuator_msg.data
+  actuator_msg.data = 0;
+  
 
   // Test 
   //nh.loginfo("Linear Actuator Cmd: %d", linear_actuator_cmd);
@@ -152,6 +161,8 @@ void loop()
     //Serial.print("I received: ");
     //Serial.println(incomingByte, DEC);
 
+    // The code in here is to test the logic when using Serial monitor to send the inputs into the ProMini
+    // Instead of using a ROS topic
     // 1
     if (incomingByte == 49)// Move down
     {
@@ -175,8 +186,16 @@ void loop()
     {
       analogWrite(PWMA, 0);
     }
-    
+
+    // If Serial Testing used...Earlier intermediate testing code
+    // Reset incoming Byte to 0 at end of receiving the message
+    incomingByte = 0;
   } // End Serial.available()
+  
+  //if (incomingByte != 48) or (incomingByte != 49)
+  //{
+  //  analogWrite(PWMA, 0);
+  //}
 
   // For Debugging
   // Waiting for Serial Input
@@ -187,4 +206,4 @@ void loop()
 
   //nh.spinOnce();
   
-}
+} // End of Main Loop
