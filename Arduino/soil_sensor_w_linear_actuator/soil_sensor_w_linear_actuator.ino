@@ -17,6 +17,8 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Uint8.h>
 
+#include <geometry_msgs/Twist.h>
+
 #include <SHT1x.h>
 
 // Specify data and clock connections and instantiate SHT1x object
@@ -40,14 +42,23 @@ ros::Publisher pub_linear_command_echo("Linear_Actuator_Command_Echo", &linear_a
 int incomingByte = 0;   // for incoming serial data
 
 // Create the callback function for the subscriber
-void actuatorCb(const std_msgs::Float32& cmd_msg)
+//void actuatorCb(const std_msgs::Float32& cmd_msg)
+void actuatorCb(const geometry_msgs::Twist& cmd_msg) // for Twist msg
 {
-  actuator_msg.data = cmd_msg.data;
-  linear_actuator_cmd_echo_msg.data = cmd_msg.data;
+
+  // Pre-Teleop
+  //actuator_msg.data = cmd_msg.data;
+  //linear_actuator_cmd_echo_msg.data = cmd_msg.data;
+
+  // For Teleop Msg Parsing
+  // Access the x variable in the data
+  actuator_msg.data = cmd_msg.linear.x;
+  linear_actuator_cmd_echo_msg.data = cmd_msg.linear.x;
 }
 
 // Create the subscriber before void setup
-ros::Subscriber<std_msgs::Float32> sub("linear_actuator_cmd", &actuatorCb );
+//ros::Subscriber<std_msgs::Float32> sub("linear_actuator_cmd", &actuatorCb );
+ros::Subscriber<geometry_msgs::Twist> sub("linear_actuator_cmd", &actuatorCb );
 
 void setup()
 {
@@ -111,7 +122,10 @@ void loop()
   //Serial.println(linear_actuator_cmd);
   // For ROS
   // 1
-  if (linear_actuator_cmd == 11)// Move down
+  //if (linear_actuator_cmd == 11)// Move down
+  
+  // Swap to using teleop
+  if (linear_actuator_cmd < 0)// Move down
   {
     analogWrite(PWMA, 64);
     digitalWrite(AIN1, HIGH);       // sets the digital pin 13 on
@@ -120,7 +134,8 @@ void loop()
   }// End else if for moving down
   
   // 2
-  else if (linear_actuator_cmd == 12) // Move up
+  //else if (linear_actuator_cmd == 12) // Move up
+  else if (linear_actuator_cmd > 0) // Move up
   {
     analogWrite(PWMA, 64);
     digitalWrite(AIN1, LOW);       // sets the digital pin 13 on
@@ -138,9 +153,13 @@ void loop()
   // If it is not set to non-zero in the next time step, the else would trigger and turn off the motor
   linear_actuator_cmd_echo_msg.data = 0;
   
+  //linear_actuator_cmd_echo_msg.linear.x = 0;
+  
   // Reset the variable for the linear actuator cmd to 0, so there needs to be a continuous stream of data for it to actuate the motor
   // linear_actuator_cmd = 0; This does not work, as actuator_msg.data is still the old value, linear_actuator_cmd takes value from actuator_msg.data
   actuator_msg.data = 0;
+  
+  //actuator_msg.linear.x = 0; // for teleop
   
 
   // Test 
