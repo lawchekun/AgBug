@@ -1,0 +1,13 @@
+<launch>
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain"
+      name="laser_filter">
+    <!-- <rosparam command="load" file="$(find mypkg)/laser_filter_config.yaml" /> -->
+    <rosparam file="$(find turtlebot3_navigation)/param/laser_filter_config.yaml" command="load" />
+    <!-- Change mapping of "scan" to "base_scan" topic for subscriber -->
+    <remap from="scan" to="base_scan" />
+    <!-- Change mapping output publisher --> 
+    <remap from="scan_filtered" to="scan" /> 
+
+  </node>
+</launch>
+
